@@ -29,7 +29,7 @@ public class ECG extends Activity
         );
 
         //initiate load
-        flipper.load();
+        flipper.setupFlipper();
     }
 
     @Override
