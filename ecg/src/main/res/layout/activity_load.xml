@@ -1,0 +1,33 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/mountain"
+    tools:context="com.complimenter.ecg.ECGLoader">
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+    <ImageView android:id="@+id/image_view_loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:keepScreenOn="true"
+        android:src="@drawable/ic_launcher"
+        android:contentDescription="@string/loading"
+        android:alpha="0.75"/>
+
+    <LinearLayout android:id="@+id/layout_text"
+        style="@style/ComplimentFont.Loader"
+        android:layout_gravity="center"
+        tools:ignore="UselessParent">
+
+        <TextView
+            android:id="@+id/text_load_msg"
+            style="@style/ComplimentFont.Small"
+            android:text="@string/load_msg" />
+
+    </LinearLayout>
+
+</RelativeLayout>

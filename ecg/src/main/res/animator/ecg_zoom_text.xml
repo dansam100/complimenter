@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<set xmlns:android="http://schemas.android.com/apk/res/android" android:ordering="sequentially">
+    <objectAnimator
+        android:valueFrom="5dp"
+        android:valueTo="12dp"
+        android:duration="@integer/zoom_duration"
+        android:propertyName="textSize" />
+
+    <objectAnimator
+        android:valueFrom="12dp"
+        android:valueTo="10dp"
+        android:duration="@integer/zoom_duration"
+        android:propertyName="textSize" />
+
+</set>
