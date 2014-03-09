@@ -1,8 +1,5 @@
 package com.complimenter.ecg.layout;
 
-import android.animation.Animator;
-import android.animation.AnimatorInflater;
-import android.animation.AnimatorSet;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.support.v4.view.GestureDetectorCompat;
@@ -15,6 +12,7 @@ import android.widget.RelativeLayout;
 import android.content.Context;
 import android.widget.TextView;
 
+import com.complimenter.ecg.ECG;
 import com.complimenter.ecg.R;
 
 /**
@@ -22,57 +20,42 @@ import com.complimenter.ecg.R;
  */
 public class ImageFlipper extends RelativeLayout {
     private GestureDetectorCompat mDetector;
-    private View view;
+    private Animation slideLeft;
+    private Animation slideRight;
 
     private int index = 0;
     public ImageFlipper(Context context, AttributeSet attrs){
         super(context, attrs);
-        this.view = this;
+
+        this.slideLeft = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_left_right);
+        this.slideRight = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_right_left);
+        this.slideLeft.setAnimationListener(animationListener);
+        this.slideRight.setAnimationListener(animationListener);
+
         mDetector = new GestureDetectorCompat(this.getContext(), new ImageFlipperGestureListener());
     }
 
-    public void load(){
+    public void setupFlipper(){
+        this.loadNext();
+    }
+
+    public void loadNext(){
         this.loadImage(getResources().getStringArray(R.array.images)[index]);
         this.loadText(getResources().getStringArray(R.array.texts)[index]);
     }
 
     private void animateFling(boolean left)
     {
-        if(left){
-            Log.d("TEST", "fling: left");
-        }
-        else{
-            Log.d("TEST", "fling: right");
-        }
-        Animation slide = (Animation) AnimationUtils.loadAnimation(this.getContext(), left ? R.anim.ecg_slide_left_right : R.anim.ecg_slide_right_left);
-        slide.setAnimationListener(
-            new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                    loadImage(getResources().getStringArray(R.array.images)[index]);
-                }
-
-                @Override
-                public void onAnimationEnd(Animation animation) {
-                    loadText(getResources().getStringArray(R.array.texts)[index]);
-                }
-
-                @Override
-                public void onAnimationRepeat(Animation animation) {
-
-                }
-            }
-        );
-        this.setAnimation(slide);
-        slide.start();
+        Animation slide = left ? slideLeft : slideRight;
+        this.startAnimation(slide);
     }
 
     private void loadImage(String imageName){
-        view.setBackgroundResource(getResources().getIdentifier(imageName, "drawable", getContext().getPackageName()));
+        setBackgroundResource(getResources().getIdentifier(imageName, "drawable", getContext().getPackageName()));
     }
 
     private void loadText(String text){
-        TextView motivation = (TextView)view.findViewById(R.id.text_compliment);
+        TextView motivation = (TextView)findViewById(R.id.text_compliment);
         motivation.setText(text);
     }
 
@@ -82,6 +65,23 @@ public class ImageFlipper extends RelativeLayout {
         super.onTouchEvent(event);
         return true;
     }
+
+    Animation.AnimationListener animationListener = new Animation.AnimationListener() {
+        @Override
+        public void onAnimationStart(Animation animation) {
+            loadImage(getResources().getStringArray(R.array.images)[index]);
+            loadText(getResources().getStringArray(R.array.texts)[index]);
+        }
+
+        @Override
+        public void onAnimationEnd(Animation animation) {
+        }
+
+        @Override
+        public void onAnimationRepeat(Animation animation) {
+
+        }
+    };
 
     class ImageFlipperGestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final String DEBUG_TAG = "Swipe";
@@ -110,7 +110,7 @@ public class ImageFlipper extends RelativeLayout {
                 animateFling(velocityX > 0);
             }
             else{
-                load();
+                loadNext();
             }
             return true;
         }
@@ -118,6 +118,14 @@ public class ImageFlipper extends RelativeLayout {
         @Override
         public void onLongPress(MotionEvent event) {
             Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
+            final ECG context = (ECG)getContext();
+            /*final ImageView imageView = (ImageView)findViewById(R.id.image_share);
+            imageView.setVisibility(View.VISIBLE);
+            AnimatorSet shareAnimator = (AnimatorSet) AnimatorInflater.loadAnimator(context, R.animator.ecg_show_share);
+            shareAnimator.setTarget(imageView);
+            shareAnimator.start();*/
+
+            //context.getFragmentManager().beginTransaction().add(new ShareFragment(), "share").addToBackStack(null).commit();
         }
 
         @Override
