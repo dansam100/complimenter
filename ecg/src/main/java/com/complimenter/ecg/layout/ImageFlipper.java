@@ -1,5 +1,8 @@
 package com.complimenter.ecg.layout;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.support.v4.view.GestureDetectorCompat;
@@ -12,25 +15,29 @@ import android.widget.RelativeLayout;
 import android.content.Context;
 import android.widget.TextView;
 
-import com.complimenter.ecg.ECG;
 import com.complimenter.ecg.R;
+
+import java.io.ByteArrayOutputStream;
 
 /**
  * Created by sam.jr on 3/2/14.
  */
-public class ImageFlipper extends RelativeLayout {
+public class ImageFlipper extends RelativeLayout implements OnShareClickEventProvider {
     private GestureDetectorCompat mDetector;
-    private Animation slideLeft;
-    private Animation slideRight;
+    private Animation mSlideLeft;
+    private Animation mSlideRight;
+    private Bitmap mImageShare;
+
+    private ImageFlipperListener mOnShareClickedListener;
 
     private int index = 0;
     public ImageFlipper(Context context, AttributeSet attrs){
         super(context, attrs);
 
-        this.slideLeft = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_left_right);
-        this.slideRight = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_right_left);
-        this.slideLeft.setAnimationListener(animationListener);
-        this.slideRight.setAnimationListener(animationListener);
+        this.mSlideLeft = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_left_right);
+        this.mSlideRight = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_right_left);
+        this.mSlideLeft.setAnimationListener(animationListener);
+        this.mSlideRight.setAnimationListener(animationListener);
 
         mDetector = new GestureDetectorCompat(this.getContext(), new ImageFlipperGestureListener());
     }
@@ -46,7 +53,7 @@ public class ImageFlipper extends RelativeLayout {
 
     private void animateFling(boolean left)
     {
-        Animation slide = left ? slideLeft : slideRight;
+        Animation slide = left ? mSlideLeft : mSlideRight;
         this.startAnimation(slide);
     }
 
@@ -68,19 +75,11 @@ public class ImageFlipper extends RelativeLayout {
 
     Animation.AnimationListener animationListener = new Animation.AnimationListener() {
         @Override
-        public void onAnimationStart(Animation animation) {
-            loadImage(getResources().getStringArray(R.array.images)[index]);
-            loadText(getResources().getStringArray(R.array.texts)[index]);
-        }
-
+        public void onAnimationStart(Animation animation) { loadNext(); }
         @Override
-        public void onAnimationEnd(Animation animation) {
-        }
-
+        public void onAnimationEnd(Animation animation) {}
         @Override
-        public void onAnimationRepeat(Animation animation) {
-
-        }
+        public void onAnimationRepeat(Animation animation) {}
     };
 
     class ImageFlipperGestureListener extends GestureDetector.SimpleOnGestureListener {
@@ -118,14 +117,7 @@ public class ImageFlipper extends RelativeLayout {
         @Override
         public void onLongPress(MotionEvent event) {
             Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
-            final ECG context = (ECG)getContext();
-            /*final ImageView imageView = (ImageView)findViewById(R.id.image_share);
-            imageView.setVisibility(View.VISIBLE);
-            AnimatorSet shareAnimator = (AnimatorSet) AnimatorInflater.loadAnimator(context, R.animator.ecg_show_share);
-            shareAnimator.setTarget(imageView);
-            shareAnimator.start();*/
-
-            //context.getFragmentManager().beginTransaction().add(new ShareFragment(), "share").addToBackStack(null).commit();
+            onShareActivated(ImageFlipper.this);
         }
 
         @Override
@@ -133,5 +125,59 @@ public class ImageFlipper extends RelativeLayout {
             Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
             return true;
         }
+    }
+
+    @Override
+    public void setOnShareClickedEventListener(ImageFlipperListener listener){
+        this.mOnShareClickedListener = listener;
+        this.findViewById(R.id.image_share).setOnClickListener(
+            new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mOnShareClickedListener.onShareClicked(view, mImageShare);
+                }
+            }
+        );
+    }
+
+    @Override
+    public void onShareActivated(View view){
+        //hide the button
+        View button = findViewById(R.id.ok_button);
+        button.setVisibility(View.GONE);
+        //get a screen shot
+        try {
+            if (mOnShareClickedListener != null) {
+                View rootView = getRootView();
+                rootView.setDrawingCacheEnabled(true);
+                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                if (rootView.getDrawingCache().compress(Bitmap.CompressFormat.JPEG, 100, stream)) {
+                    mImageShare = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
+                }
+                mOnShareClickedListener.onShareActivated(ImageFlipper.this);
+            }
+        }
+        catch(Exception e){}
+        //show the share icon
+        View shareImg = findViewById(R.id.image_share);
+        shareImg.setVisibility(View.VISIBLE);
+    }
+
+    public void onShareDeactivated(Context context){
+        //hide the share icon
+        View shareImg = findViewById(R.id.image_share);
+        shareImg.setVisibility(View.GONE);
+
+        //show the button
+        View button = findViewById(R.id.ok_button);
+        button.setVisibility(View.VISIBLE);
+
+        //dispose of the screen shot
+        mImageShare = null;
+    }
+
+    public interface ImageFlipperListener{
+        public void onShareActivated(View view);
+        public void onShareClicked(View view, Bitmap bitmap);
     }
 }

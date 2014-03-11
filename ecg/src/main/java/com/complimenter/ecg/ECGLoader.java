@@ -2,6 +2,7 @@ package com.complimenter.ecg;
 
 import android.animation.Animator;
 import android.animation.AnimatorInflater;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.annotation.TargetApi;
@@ -25,33 +26,31 @@ public class ECGLoader extends Activity
         //find text view
         final TextView textView = (TextView)findViewById(R.id.text_load_msg);
         AnimatorSet zoomAnimator = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.ecg_zoom_text);
+        zoomAnimator.setTarget(textView);
+        //fade out the current view
+        final View container = this.findViewById(R.id.container);
+        final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.ecg_fade_out);
+        fadeOut.setTarget(container);
+
+        //begin zoom animation
         zoomAnimator.addListener(
-            new Animator.AnimatorListener() {
-                @Override
-                public void onAnimationStart(Animator animator) {
-
+                new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        fadeOut.start();
+                    }
                 }
-
+        );
+        fadeOut.addListener(
+            new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animator) {
                     Intent intent = new Intent(ECGLoader.this, ECG.class);
                     startActivity(intent);
                     finish();
                 }
-
-                @Override
-                public void onAnimationCancel(Animator animator) {
-
-                }
-
-                @Override
-                public void onAnimationRepeat(Animator animator) {
-
-                }
             }
-
         );
-        zoomAnimator.setTarget(textView);
         zoomAnimator.start();
     }
 
