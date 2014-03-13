@@ -4,32 +4,38 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import com.complimenter.ecg.layout.ImageFlipper;
-import com.complimenter.ecg.layout.OnShareClickEventProvider;
+import com.complimenter.ecg.layout.ImageFlipperEventProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
 
-public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
+public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, MediaScannerConnection.MediaScannerConnectionClient
 {
     private boolean mShareMode = false;
     private Vibrator mVibrator;
+    private MediaScannerConnection mMediaScanner;
+    private File mFavoritedImageFile;
+    private ImageFlipper mFlipper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ecg);
         mVibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
+        mFavoritedImageFile = null;
         //find views
         final View controlsView = findViewById(R.id.ok_button);
-        final ImageFlipper flipper = (ImageFlipper)findViewById(R.id.container);
+        mFlipper = (ImageFlipper)findViewById(R.id.container);
 
         //set listener for close event
         controlsView.setOnClickListener(
@@ -42,11 +48,13 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
         );
 
         //initiate load
-        OnShareClickEventProvider shareProvider = (OnShareClickEventProvider)flipper;
+        ImageFlipperEventProvider shareProvider = (ImageFlipperEventProvider)mFlipper;
         if(shareProvider != null) {
-            flipper.setOnShareClickedEventListener(this);
+            mFlipper.setOnShareClickedEventListener(this);
+            mFlipper.setOnFavoriteClickedEventListener(this);
+            mFlipper.setOnSelectionChangedEventListener(this);
         }
-        flipper.setupFlipper();
+        mFlipper.setupFlipper();
     }
 
     @Override
@@ -63,7 +71,7 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
     }
 
     @Override
-    public void onShareActivated(View view) {
+    public void onSelectionActivated(View view) {
         vibrate();
         this.mShareMode = true;
     }
@@ -86,6 +94,43 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(sharedImage));
         shareIntent.setType("image/jpeg");
         startActivity(Intent.createChooser(shareIntent, getResources().getString(R.string.share_via)));
+        this.deactivateSelection();
+    }
+
+    @Override
+    public void onFavoriteClicked(View view, Bitmap image, String imageName, String text){
+        String fileName = imageName + text.hashCode() + ".jpg";
+        mFavoritedImageFile = new File(this.getFilesDir(), fileName);
+        if(mFavoritedImageFile.exists()) {
+            mFavoritedImageFile.delete();
+            Log.d("FAVORITE", "Removing favorite: " + Uri.fromFile(mFavoritedImageFile));
+            Toast.makeText(this, getResources().getString(R.string.unfavorited), 1000).show();
+        }
+        else{
+            try {
+                FileOutputStream stream = new FileOutputStream(mFavoritedImageFile);
+                image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                stream.flush();
+                stream.close();
+            } catch (Exception e) {
+                Log.e("FAILED", "Failed to create file");
+            }
+            Log.d("FAVORITE", "Favoriting: " + Uri.fromFile(mFavoritedImageFile));
+            Toast.makeText(this, getResources().getString(R.string.favorited), 1000).show();
+        }
+        //start media scannner
+        mMediaScanner = new MediaScannerConnection(this, this);
+        mMediaScanner.connect();
+        //favorite/de-favorite file
+        mFlipper.setFavorite(mFavoritedImageFile.exists());
+        this.deactivateSelection();
+    }
+
+    @Override
+    public void onSelectionChanged(View view, String imageName, String text){
+        String fileName = imageName + text.hashCode() + ".jpg";
+        File favoritedImage = new File(this.getFilesDir(), fileName);
+        mFlipper.setFavorite(favoritedImage.exists());
     }
 
     @Override
@@ -93,17 +138,38 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
     {
         if(this.mShareMode){
             vibrate();
-            this.mShareMode = false;
-            ImageFlipper imageFlipper = (ImageFlipper)findViewById(R.id.container);
-            imageFlipper.onShareDeactivated(this);
+            this.deactivateSelection();
         }
         else{
             super.onBackPressed();
         }
     }
 
+    public void deactivateSelection(){
+        this.mShareMode = false;
+        mFlipper.onSelectionDeactivated(this);
+    }
+
     public void vibrate(){
         long[] pattern = {0, 100};
         mVibrator.vibrate(pattern, -1);
+    }
+
+    @Override
+    public void onMediaScannerConnected() {
+        if(mFavoritedImageFile != null) {
+            try {
+                mMediaScanner.scanFile(mFavoritedImageFile.getPath(), "image/jpeg");
+            }
+            catch(Exception e){
+                Log.d("SCANNER", "Media scanned failed" + e);
+            }
+        }
+    }
+
+    @Override
+    public void onScanCompleted(String s, Uri uri) {
+        mMediaScanner.disconnect();
+        Toast.makeText(this, getResources().getString(R.string.favorited_image_scanned), 2000).show();
     }
 }

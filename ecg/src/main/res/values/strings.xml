@@ -6,7 +6,11 @@
     <string name="load_msg">Making you smile since 1337</string>
     <string name="loading">Loading...</string>
     <string name="share">Share</string>
+    <string name="shared">Shared.</string>
     <string name="favorite">Favorite</string>
+    <string name="favorited">Favorited.</string>
+    <string name="unfavorited">Removed from favorites.</string>
+    <string name="favorited_image_scanned">Favorited image added to your gallery.</string>
     <string name="share_via">Share via:</string>
     <string name="share_text">This made my day. I hope it makes yours too!</string>
 
