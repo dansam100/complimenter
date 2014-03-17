@@ -1,5 +1,10 @@
 package com.complimenter.ecg.layout;
 
+import android.animation.Animator;
+import android.animation.AnimatorInflater;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.os.Handler;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -13,9 +18,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.RelativeLayout;
 import android.content.Context;
 import android.widget.TextView;
-
 import com.complimenter.ecg.R;
-
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -25,15 +28,17 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     private GestureDetectorCompat mDetector;
     private Animation mSlideLeft;
     private Animation mSlideRight;
-    private Animation mIntegrate;
-    private Animation mDisintegrate;
     private Bitmap mImageContext;
 
     private boolean mMenuVisible = false;
+    private boolean mMenuMode = false;
 
     private ImageFlipperListener mOnShareClickedListener;
     private ImageFlipperListener mOnFavoriteClickedListener;
-    private ImageFlipperListener mOnSelectionChangedListener;
+    private ImageFlipperListener mOnNavigateEventListener;
+
+    private Handler mMenuHandler;
+    private Runnable mMenuCallback;
 
     private int index = 0;
     public ImageFlipper(Context context, AttributeSet attrs){
@@ -43,6 +48,8 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         this.mSlideRight = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_right_left);
         this.mSlideLeft.setAnimationListener(animationListener);
         this.mSlideRight.setAnimationListener(animationListener);
+
+        this.mMenuHandler = new Handler();
 
         mDetector = new GestureDetectorCompat(this.getContext(), new ImageFlipperGestureListener());
     }
@@ -54,19 +61,51 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
 
     public void toggleMenu(boolean show){
         if(show){
-            this.hideView(findViewById(R.id.flipper_menu));
+            this.showView(findViewById(R.id.flipper_menu));
         }
         else{
-
+            this.hideView(findViewById(R.id.flipper_menu));
         }
     }
 
-    public void hideView(View view){
-
+    public void hideView(final View view){
+        final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_hide_share);
+        fadeOut.setTarget(view);
+        fadeOut.start();
+        view.setVisibility(View.GONE);
     }
 
-    public void showView(View view){
-
+    public void showView(final View view){
+        if(!mMenuMode && mMenuCallback != null){
+            mMenuHandler.removeCallbacks(mMenuCallback);
+        }
+        if(view.getVisibility() == View.VISIBLE){
+            mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
+                @Override
+                public void run() {
+                    hideView(view);
+                }
+            }, 2000);
+        }
+        else if(view.getVisibility() == View.GONE) {
+            final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
+            fadeIn.setTarget(view);
+            fadeIn.addListener(
+                new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
+                            @Override
+                            public void run() {
+                                hideView(view);
+                            }
+                        }, 2000);
+                    }
+                }
+            );
+            view.setVisibility(View.VISIBLE);
+            fadeIn.start();
+        }
     }
 
     private String getCurrentImageName(){
@@ -80,13 +119,17 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     public void loadNext(){
         this.loadImage(getCurrentImageName());
         this.loadText(getCurrentText());
-        this.mOnSelectionChangedListener.onSelectionChanged(this, getCurrentImageName(), getCurrentText());
+        if(this.mOnNavigateEventListener != null) {
+            this.mOnNavigateEventListener.onNavigate(this, getCurrentImageName(), getCurrentText());
+        }
     }
 
     private void animateFling(boolean left)
     {
         Animation slide = left ? mSlideLeft : mSlideRight;
-        this.startAnimation(slide);
+        if(!mMenuMode) {
+            this.startAnimation(slide);
+        }
     }
 
     private void loadImage(String imageName){
@@ -133,6 +176,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         @Override
         public boolean onDown(MotionEvent event){
             Log.d(DEBUG_TAG, "onDown: " + event.toString());
+            showView(findViewById(R.id.flipper_menu));
             return true;
         }
 
@@ -155,7 +199,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         @Override
         public void onLongPress(MotionEvent event) {
             Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
-            onSelectionActivated(ImageFlipper.this);
+            activateSelection(ImageFlipper.this);
         }
 
         @Override
@@ -172,7 +216,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnShareClickedListener.onShareClicked(view, mImageContext);
+                mOnShareClickedListener.onShareClicked(view, mImageContext);
                 }
             }
         );
@@ -180,7 +224,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnShareClickedListener.onShareClicked(view, mImageContext);
+                mOnShareClickedListener.onShareClicked(view, mImageContext);
                 }
             }
         );
@@ -193,7 +237,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
+                mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
                 }
             }
         );
@@ -201,7 +245,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
+                mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
                 }
             }
         );
@@ -209,11 +253,10 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
 
     @Override
     public void setOnSelectionChangedEventListener(ImageFlipperListener listener) {
-        this.mOnSelectionChangedListener = listener;
+        this.mOnNavigateEventListener = listener;
     }
 
-    @Override
-    public void onSelectionActivated(View view){
+    public void activateSelection(Object sender){
         //hide the button
         View button = findViewById(R.id.ok_button);
         button.setVisibility(View.GONE);
@@ -233,28 +276,59 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             Log.d("FLIPPER", "Unable to activate share due to error:" + e);
         }
         //show the share icon
-        View shareImg = findViewById(R.id.flipper_options);
-        shareImg.setVisibility(View.VISIBLE);
+        View menuOptionView = findViewById(R.id.flipper_options);
+        menuOptionView.setVisibility(View.VISIBLE);
+        menuOptionView.setOnClickListener(
+            new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    deactivateSelection(view);
+                }
+            }
+        );
+        final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
+        fadeIn.setTarget(menuOptionView);
+        fadeIn.addListener(
+            new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animator) {
+                mMenuMode = true;
+                }
+            }
+        );
+        fadeIn.start();
     }
 
-    @Override
-    public void onSelectionDeactivated(Context context){
+    public void deactivateSelection(Object sender){
         //hide the share icon
-        View shareImg = findViewById(R.id.flipper_options);
-        shareImg.setVisibility(View.GONE);
-
+        final View menuOptionView = findViewById(R.id.flipper_options);
         //show the button
         View button = findViewById(R.id.ok_button);
         button.setVisibility(View.VISIBLE);
-
-        //dispose of the screen shot
-        mImageContext = null;
+        if(mOnShareClickedListener != null) {
+            mOnShareClickedListener.onSelectionDeactivated(ImageFlipper.this);
+        }
+        final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_hide_share);
+        fadeOut.setTarget(menuOptionView);
+        fadeOut.addListener(
+            new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animator) {
+                mMenuMode = false;
+                //dispose of the screen shot
+                mImageContext = null;
+                menuOptionView.setVisibility(View.GONE);
+                }
+            }
+        );
+        fadeOut.start();
     }
 
     public interface ImageFlipperListener{
         public void onSelectionActivated(View view);
+        public void onSelectionDeactivated(View view);
         public void onShareClicked(View view, Bitmap bitmap);
         public void onFavoriteClicked(View view, Bitmap bitmap, String name, String text);
-        public void onSelectionChanged(View view, String imageName, String text);
+        public void onNavigate(View view, String imageName, String text);
     }
 }

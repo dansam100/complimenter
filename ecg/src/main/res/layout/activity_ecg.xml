@@ -16,14 +16,22 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginRight="10dp"
-        android:gravity="right">
+        android:gravity="right"
+        android:background="@drawable/flipper_menu"
+        android:alpha="0"
+        android:visibility="gone">
 
-        <ImageButton
-            android:id="@+id/image_share_small"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:background="@android:drawable/ic_menu_share"/>
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="5dp">
+            <ImageButton
+                android:id="@+id/image_share_small"
+                android:padding="10dp"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:drawable/ic_menu_share"/>
+        </FrameLayout>
 
         <ImageButton
             android:id="@+id/image_favorite_small"
@@ -52,7 +60,8 @@
         android:id="@+id/flipper_options"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:visibility="gone">
+        android:visibility="gone"
+        android:alpha="0">
 
         <ImageView
             android:layout_width="fill_parent"

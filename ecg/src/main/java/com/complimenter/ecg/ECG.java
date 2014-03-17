@@ -77,6 +77,11 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
     }
 
     @Override
+    public void onSelectionDeactivated(View view) {
+        this.mShareMode = false;
+    }
+
+    @Override
     public void onShareClicked(View view, Bitmap image){
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.share_text));
@@ -127,7 +132,7 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
     }
 
     @Override
-    public void onSelectionChanged(View view, String imageName, String text){
+    public void onNavigate(View view, String imageName, String text){
         String fileName = imageName + text.hashCode() + ".jpg";
         File favoritedImage = new File(this.getFilesDir(), fileName);
         mFlipper.setFavorite(favoritedImage.exists());
@@ -147,7 +152,7 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
 
     public void deactivateSelection(){
         this.mShareMode = false;
-        mFlipper.onSelectionDeactivated(this);
+        mFlipper.deactivateSelection(this);
     }
 
     public void vibrate(){
