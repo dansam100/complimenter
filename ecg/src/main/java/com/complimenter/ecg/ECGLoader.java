@@ -23,24 +23,11 @@ public class ECGLoader extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_load);
-        //find text view
-        final TextView textView = (TextView)findViewById(R.id.text_load_msg);
-        AnimatorSet zoomAnimator = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.ecg_zoom_text);
-        zoomAnimator.setTarget(textView);
         //fade out the current view
         final View container = this.findViewById(R.id.container);
         final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this, R.animator.ecg_fade_out);
         fadeOut.setTarget(container);
-
-        //begin zoom animation
-        zoomAnimator.addListener(
-                new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animator) {
-                        fadeOut.start();
-                    }
-                }
-        );
+        Handler startActivity = new Handler();
         fadeOut.addListener(
             new AnimatorListenerAdapter() {
                 @Override
@@ -51,7 +38,15 @@ public class ECGLoader extends Activity
                 }
             }
         );
-        zoomAnimator.start();
+        //launch the main activity
+        startActivity.postDelayed(
+            new Runnable() {
+                @Override
+                public void run() {
+                    fadeOut.start();
+                }
+            }, 1500
+        );
     }
 
     @Override
