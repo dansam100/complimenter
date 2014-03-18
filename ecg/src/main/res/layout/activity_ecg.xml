@@ -17,6 +17,8 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="right"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
         android:background="@drawable/flipper_menu"
         android:alpha="0"
         android:visibility="gone">

@@ -28,6 +28,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     private GestureDetectorCompat mDetector;
     private Animation mSlideLeft;
     private Animation mSlideRight;
+
     private Bitmap mImageContext;
 
     private boolean mMenuVisible = false;
@@ -91,7 +92,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
                 mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
                     @Override
                     public void run() {
-                        hideView(view);
+                    hideView(view);
                     }
                 }, 2000);
             } else if (view.getVisibility() == View.GONE) {
@@ -104,7 +105,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
                             mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
                                 @Override
                                 public void run() {
-                                    hideView(view);
+                                hideView(view);
                                 }
                             }, 1000);
                         }
