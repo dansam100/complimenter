@@ -59,29 +59,43 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
 
     public void toggleMenu(boolean show){
         if(show){
-            this.showView(findViewById(R.id.flipper_menu));
+            this.showView(findViewById(R.id.flipper_menu), true);
         }
         else{
-            this.hideView(findViewById(R.id.flipper_menu));
+            this.hideView(findViewById(R.id.flipper_menu), true);
         }
     }
 
-    public void hideView(final View view){
-        final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_hide_share);
-        fadeOut.setTarget(view);
-        fadeOut.addListener(
-            new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animator) {
-                    view.setVisibility(View.GONE);
-                }
-            }
-        );
-        mMenuVisible = false;
-        fadeOut.start();
+    private void toggleMenuQuick(boolean show) {
+        if(show){
+            this.showView(findViewById(R.id.flipper_menu), false);
+        }
+        else{
+            this.hideView(findViewById(R.id.flipper_menu), false);
+        }
     }
 
-    public void showView(final View view){
+    public void hideView(final View view, boolean animate){
+        if(animate) {
+            final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_hide_share);
+            fadeOut.setTarget(view);
+            fadeOut.addListener(
+                    new AnimatorListenerAdapter() {
+                        @Override
+                        public void onAnimationEnd(Animator animator) {
+                            view.setVisibility(View.GONE);
+                        }
+                    }
+            );
+            fadeOut.start();
+        }
+        else{
+            view.setVisibility(View.GONE);
+        }
+        mMenuVisible = false;
+    }
+
+    public void showView(final View view, boolean animate){
         if(mMenuCallback != null){
             mMenuHandler.removeCallbacks(mMenuCallback);
         }
@@ -89,28 +103,33 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
                 @Override
                 public void run() {
-                hideView(view);
+                    hideView(view, true);
                 }
             }, 1000);
         } else{
-            final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
-            fadeIn.setTarget(view);
-            fadeIn.addListener(
-                new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animator) {
-                        mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
+            if(animate) {
+                final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
+                fadeIn.setTarget(view);
+                fadeIn.addListener(
+                        new AnimatorListenerAdapter() {
                             @Override
-                            public void run() {
-                                hideView(view);
+                            public void onAnimationEnd(Animator animator) {
+                                mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        hideView(view, true);
+                                    }
+                                }, 1000);
                             }
-                        }, 1000);
-                    }
-                }
-            );
-            view.setVisibility(View.VISIBLE);
+                        }
+                );
+                view.setVisibility(View.VISIBLE);
+                fadeIn.start();
+            }
+            else{
+                view.setVisibility(View.VISIBLE);
+            }
             mMenuVisible = true;
-            fadeIn.start();
         }
     }
 
@@ -199,6 +218,29 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         }
     }
 
+    public Bitmap capture(){
+        //get a screen shot
+        Bitmap capture = null;
+        //hide the button and top menu
+        View button = findViewById(R.id.ok_button);
+        button.setVisibility(View.GONE);    //hide views that are not required
+        toggleMenuQuick(false);             //hide views that are not required
+        try {
+            View rootView = getRootView();
+            rootView.setDrawingCacheEnabled(true);
+            ByteArrayOutputStream stream = new ByteArrayOutputStream();
+            if (rootView.getDrawingCache().compress(Bitmap.CompressFormat.JPEG, 100, stream)) {
+                capture = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
+            }
+        }
+        catch(Exception e){
+            Log.d("FLIPPER", "Unable to activate share due to error:" + e);
+        }
+        button.setVisibility(View.VISIBLE);
+        toggleMenuQuick(true);
+        return capture;
+    }
+
     @Override
     public void setOnShareClickedEventListener(ImageFlipperListener listener){
         this.mOnShareClickedListener = listener;
@@ -206,7 +248,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnShareClickedListener.onShareClicked(view, null);
+                    mOnShareClickedListener.onShareClicked(view, capture());
                 }
             }
         );
@@ -219,7 +261,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnFavoriteClickedListener.onFavoriteClicked(view, null, getCurrentImageName(), getCurrentText());
+                    mOnFavoriteClickedListener.onFavoriteClicked(view, capture(), getCurrentImageName(), getCurrentText());
                 }
             }
         );
