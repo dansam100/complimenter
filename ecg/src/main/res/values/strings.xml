@@ -12,6 +12,7 @@
     <string name="unfavorited">Removed from favorites.</string>
     <string name="favorited_image_scanned">Favorited image added to your gallery.</string>
     <string name="share_via">Share via:</string>
+    <string name="share_subject">Smile!</string>
     <string name="share_text">This made my day. I hope it makes yours too!</string>
 
     <string-array name="images">
@@ -29,8 +30,6 @@
         <item>What are you looking at, you pretty thing?</item>
     </string-array>
 
-    <string name="title_activity_sharing">SharingActivity</string>
-    <string name="dummy_button">Dummy Button</string>
-    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="favorites_folder">Favorites</string>
 
 </resources>

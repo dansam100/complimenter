@@ -1,13 +1,12 @@
 package com.complimenter.ecg;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Vibrator;
+import android.os.Environment;
+import android.os.Handler;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -19,17 +18,15 @@ import com.complimenter.ecg.layout.ImageFlipperEventProvider;
 import java.io.File;
 import java.io.FileOutputStream;
 
-public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, MediaScannerConnection.MediaScannerConnectionClient
+public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
 {
-    private MediaScannerConnection mMediaScanner;
-    private File mFavoritedImageFile;
+    private File mFavoritesFolder;
     private ImageFlipper mFlipper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ecg);
-        mFavoritedImageFile = null;
         //find views
         final View controlsView = findViewById(R.id.ok_button);
         mFlipper = (ImageFlipper)findViewById(R.id.container);
@@ -44,8 +41,11 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
             }
         );
 
+        //setup folders
+        this.mFavoritesFolder = new File(Environment.getExternalStoragePublicDirectory(getString(R.string.app_name)), getString(R.string.favorites_folder));
+
         //initiate load
-        ImageFlipperEventProvider shareProvider = (ImageFlipperEventProvider)mFlipper;
+        ImageFlipperEventProvider shareProvider = mFlipper;
         if(shareProvider != null) {
             mFlipper.setOnShareClickedEventListener(this);
             mFlipper.setOnFavoriteClickedEventListener(this);
@@ -57,7 +57,11 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-
+        if(!mFavoritesFolder.exists()){
+            if(!mFavoritesFolder.mkdirs()){
+                Log.d("FAVORITES:", "Unable to create favorites folder");
+            }
+        }
         //TODO: Set up the image and compliment loaders
     }
 
@@ -72,6 +76,7 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
         if(image != null) {
             Intent shareIntent = new Intent(Intent.ACTION_SEND);
             shareIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.share_text));
+            shareIntent.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.share_subject));
             File sharedImage = new File(this.getExternalCacheDir(), "shared_img.jpg");
             try {
                 FileOutputStream stream = new FileOutputStream(sharedImage);
@@ -92,53 +97,45 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
     public void onFavoriteClicked(View view, Bitmap image, String imageName, String text){
         if(image != null) {
             String fileName = imageName + text.hashCode() + ".jpg";
-            mFavoritedImageFile = new File(this.getFilesDir(), fileName);
-            if (mFavoritedImageFile.exists()) {
-                mFavoritedImageFile.delete();
-                Log.d("FAVORITE", "Removing favorite: " + Uri.fromFile(mFavoritedImageFile));
-                Toast.makeText(this, getResources().getString(R.string.unfavorited), 1000).show();
-            } else {
+            File favoritedImage = new File(mFavoritesFolder, fileName);
+            if (favoritedImage.exists()) {
+                if(favoritedImage.delete()) {
+                    Log.d("FAVORITE", "Removing favorite: " + Uri.fromFile(favoritedImage));
+                }
+                else{ Log.d("FAVORITE", "Failed to remove favorite: " + Uri.fromFile(favoritedImage)); }
+                //start media scannner
+                sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.fromFile(favoritedImage)));
+                Toast.makeText(this, getResources().getString(R.string.unfavorited), Toast.LENGTH_SHORT).show();
+            }
+            else {
                 try {
-                    FileOutputStream stream = new FileOutputStream(mFavoritedImageFile);
+                    FileOutputStream stream = new FileOutputStream(favoritedImage);
                     image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     stream.flush();
                     stream.close();
-                } catch (Exception e) {
-                    Log.e("FAILED", "Failed to create file");
                 }
-                Log.d("FAVORITE", "Favoriting: " + Uri.fromFile(mFavoritedImageFile));
-                Toast.makeText(this, getResources().getString(R.string.favorited), 1000).show();
+                catch (Exception e) { Log.e("FAILED", "Failed to create file"); }
+                Log.d("FAVORITE", "Favoriting: " + Uri.fromFile(favoritedImage));
+                //start media scannner
+                sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.fromFile(favoritedImage)));
+                Toast.makeText(this, getResources().getString(R.string.favorited), Toast.LENGTH_SHORT).show();
+                //display favorited string
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ECG.this, getResources().getString(R.string.favorited_image_scanned), Toast.LENGTH_SHORT).show();
+                    }
+                }, Toast.LENGTH_SHORT);
             }
-            //start media scannner
-            mMediaScanner = new MediaScannerConnection(this, this);
-            mMediaScanner.connect();
             //favorite/de-favorite file
-            mFlipper.setFavorite(mFavoritedImageFile.exists());
+            mFlipper.setFavorite(favoritedImage.exists());
         }
     }
 
     @Override
     public void onNavigate(View view, String imageName, String text){
         String fileName = imageName + text.hashCode() + ".jpg";
-        File favoritedImage = new File(this.getFilesDir(), fileName);
+        File favoritedImage = new File(mFavoritesFolder, fileName);
         mFlipper.setFavorite(favoritedImage.exists());
-    }
-
-    @Override
-    public void onMediaScannerConnected() {
-        if(mFavoritedImageFile != null) {
-            try {
-                mMediaScanner.scanFile(mFavoritedImageFile.getPath(), "image/jpeg");
-            }
-            catch(Exception e){
-                Log.d("SCANNER", "Media scanned failed" + e);
-            }
-        }
-    }
-
-    @Override
-    public void onScanCompleted(String s, Uri uri) {
-        mMediaScanner.disconnect();
-        Toast.makeText(this, getResources().getString(R.string.favorited_image_scanned), 2000).show();
     }
 }

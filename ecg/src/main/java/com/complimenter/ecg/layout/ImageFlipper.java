@@ -80,12 +80,12 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_hide_share);
             fadeOut.setTarget(view);
             fadeOut.addListener(
-                    new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animator) {
-                            view.setVisibility(View.GONE);
-                        }
+                new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        view.setVisibility(View.GONE);
                     }
+                }
             );
             fadeOut.start();
         }
@@ -99,36 +99,33 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         if(mMenuCallback != null){
             mMenuHandler.removeCallbacks(mMenuCallback);
         }
-        if (mMenuVisible) {
+        if (mMenuVisible || !animate) {
+            view.setVisibility(View.VISIBLE);
             mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
                 @Override
                 public void run() {
                     hideView(view, true);
                 }
             }, 1000);
-        } else{
-            if(animate) {
-                final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
-                fadeIn.setTarget(view);
-                fadeIn.addListener(
-                        new AnimatorListenerAdapter() {
+        }
+        else if(animate){
+            final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
+            fadeIn.setTarget(view);
+            fadeIn.addListener(
+                new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animator) {
+                        mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
                             @Override
-                            public void onAnimationEnd(Animator animator) {
-                                mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        hideView(view, true);
-                                    }
-                                }, 1000);
+                            public void run() {
+                                hideView(view, true);
                             }
-                        }
-                );
-                view.setVisibility(View.VISIBLE);
-                fadeIn.start();
-            }
-            else{
-                view.setVisibility(View.VISIBLE);
-            }
+                        }, 1000);
+                    }
+                }
+            );
+            view.setVisibility(View.VISIBLE);
+            fadeIn.start();
             mMenuVisible = true;
         }
     }
