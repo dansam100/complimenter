@@ -20,8 +20,8 @@
         android:layout_marginLeft="10dp"
         android:layout_marginRight="10dp"
         android:background="@drawable/flipper_menu"
-        android:alpha="0"
-        android:visibility="gone">
+        android:alpha="1"
+        android:visibility="visible">
 
         <FrameLayout
             android:layout_width="wrap_content"
