@@ -29,10 +29,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     private Animation mSlideLeft;
     private Animation mSlideRight;
 
-    private Bitmap mImageContext;
-
     private boolean mMenuVisible = false;
-    private boolean mMenuMode = false;
 
     private ImageFlipperListener mOnShareClickedListener;
     private ImageFlipperListener mOnFavoriteClickedListener;
@@ -60,10 +57,6 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         this.toggleMenu(false);
     }
 
-    public void toggleMenu(){
-        this.toggleMenu(!mMenuVisible);
-    }
-
     public void toggleMenu(boolean show){
         if(show){
             this.showView(findViewById(R.id.flipper_menu));
@@ -89,37 +82,35 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     }
 
     public void showView(final View view){
-        if(!mMenuMode) {
-            if(mMenuCallback != null){
-                mMenuHandler.removeCallbacks(mMenuCallback);
-            }
-            if (mMenuVisible) {
-                mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
+        if(mMenuCallback != null){
+            mMenuHandler.removeCallbacks(mMenuCallback);
+        }
+        if (mMenuVisible) {
+            mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
+                @Override
+                public void run() {
+                hideView(view);
+                }
+            }, 1000);
+        } else{
+            final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
+            fadeIn.setTarget(view);
+            fadeIn.addListener(
+                new AnimatorListenerAdapter() {
                     @Override
-                    public void run() {
-                    hideView(view);
+                    public void onAnimationEnd(Animator animator) {
+                        mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
+                            @Override
+                            public void run() {
+                                hideView(view);
+                            }
+                        }, 1000);
                     }
-                }, 1000);
-            } else{
-                final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
-                fadeIn.setTarget(view);
-                fadeIn.addListener(
-                    new AnimatorListenerAdapter() {
-                        @Override
-                        public void onAnimationEnd(Animator animator) {
-                            mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
-                                @Override
-                                public void run() {
-                                    hideView(view);
-                                }
-                            }, 1000);
-                        }
-                    }
-                );
-                mMenuVisible = true;
-                view.setVisibility(View.VISIBLE);
-                fadeIn.start();
-            }
+                }
+            );
+            view.setVisibility(View.VISIBLE);
+            mMenuVisible = true;
+            fadeIn.start();
         }
     }
 
@@ -142,9 +133,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     private void animateFling(boolean left)
     {
         Animation slide = left ? mSlideLeft : mSlideRight;
-        if(!mMenuMode) {
-            this.startAnimation(slide);
-        }
+        this.startAnimation(slide);
     }
 
     private void loadImage(String imageName){
@@ -157,7 +146,6 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     }
 
     public void setFavorite(boolean favorite){
-        findViewById(R.id.image_favorite).setSelected(favorite);
         findViewById(R.id.image_favorite_small).setSelected(favorite);
     }
 
@@ -187,12 +175,6 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         }
 
         @Override
-        public boolean onDown(MotionEvent event){
-            Log.d(DEBUG_TAG, "onDown: " + event.toString());
-            return true;
-        }
-
-        @Override
         public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
             Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
             if(Math.abs(velocityX) > Math.abs(velocityY)) {
@@ -215,36 +197,16 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             }
             return true;
         }
-
-        @Override
-        public void onLongPress(MotionEvent event) {
-            Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
-            activateSelection(ImageFlipper.this);
-        }
-
-        @Override
-        public boolean onDoubleTap(MotionEvent event) {
-            Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
-            return true;
-        }
     }
 
     @Override
     public void setOnShareClickedEventListener(ImageFlipperListener listener){
         this.mOnShareClickedListener = listener;
-        this.findViewById(R.id.image_share).setOnClickListener(
-            new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mOnShareClickedListener.onShareClicked(view, mImageContext);
-                }
-            }
-        );
         this.findViewById(R.id.image_share_small).setOnClickListener(
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnShareClickedListener.onShareClicked(view, mImageContext);
+                    mOnShareClickedListener.onShareClicked(view, null);
                 }
             }
         );
@@ -253,19 +215,11 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     @Override
     public void setOnFavoriteClickedEventListener(ImageFlipperListener listener){
         this.mOnFavoriteClickedListener = listener;
-        this.findViewById(R.id.image_favorite).setOnClickListener(
-            new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
-                }
-            }
-        );
         this.findViewById(R.id.image_favorite_small).setOnClickListener(
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
+                    mOnFavoriteClickedListener.onFavoriteClicked(view, null, getCurrentImageName(), getCurrentText());
                 }
             }
         );
@@ -276,78 +230,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         this.mOnNavigateEventListener = listener;
     }
 
-    public void activateSelection(Object sender){
-        //hide the button and top menu
-        View button = findViewById(R.id.ok_button);
-        button.setVisibility(View.GONE);
-        toggleMenu(false);
-        //get a screen shot
-        try {
-            View rootView = getRootView();
-            rootView.setDrawingCacheEnabled(true);
-            ByteArrayOutputStream stream = new ByteArrayOutputStream();
-            if (rootView.getDrawingCache().compress(Bitmap.CompressFormat.JPEG, 100, stream)) {
-                mImageContext = BitmapFactory.decodeByteArray(stream.toByteArray(), 0, stream.size());
-            }
-            if(this.mOnShareClickedListener != null) {
-                mOnShareClickedListener.onSelectionActivated(ImageFlipper.this);
-            }
-        }
-        catch(Exception e){
-            Log.d("FLIPPER", "Unable to activate share due to error:" + e);
-        }
-        //show the share icon
-        View menuOptionView = findViewById(R.id.flipper_options);
-        menuOptionView.setVisibility(View.VISIBLE);
-        menuOptionView.setOnClickListener(
-            new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    deactivateSelection(view);
-                }
-            }
-        );
-        final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
-        fadeIn.setTarget(menuOptionView);
-        fadeIn.addListener(
-            new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animator) {
-                    mMenuMode = true;
-                }
-            }
-        );
-        fadeIn.start();
-    }
-
-    public void deactivateSelection(Object sender){
-        //hide the share icon
-        final View menuOptionView = findViewById(R.id.flipper_options);
-        //show the button
-        View button = findViewById(R.id.ok_button);
-        button.setVisibility(View.VISIBLE);
-        if(mOnShareClickedListener != null) {
-            mOnShareClickedListener.onSelectionDeactivated(ImageFlipper.this);
-        }
-        final AnimatorSet fadeOut = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_hide_share);
-        fadeOut.setTarget(menuOptionView);
-        fadeOut.addListener(
-            new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animator) {
-                mMenuMode = false;
-                //dispose of the screen shot
-                mImageContext = null;
-                menuOptionView.setVisibility(View.GONE);
-                }
-            }
-        );
-        fadeOut.start();
-    }
-
     public interface ImageFlipperListener{
-        public void onSelectionActivated(View view);
-        public void onSelectionDeactivated(View view);
         public void onShareClicked(View view, Bitmap bitmap);
         public void onFavoriteClicked(View view, Bitmap bitmap, String name, String text);
         public void onNavigate(View view, String imageName, String text);

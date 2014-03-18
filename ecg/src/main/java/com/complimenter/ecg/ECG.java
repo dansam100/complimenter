@@ -21,8 +21,6 @@ import java.io.FileOutputStream;
 
 public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, MediaScannerConnection.MediaScannerConnectionClient
 {
-    private boolean mShareMode = false;
-    private Vibrator mVibrator;
     private MediaScannerConnection mMediaScanner;
     private File mFavoritedImageFile;
     private ImageFlipper mFlipper;
@@ -31,7 +29,6 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ecg);
-        mVibrator = (Vibrator)getSystemService(Context.VIBRATOR_SERVICE);
         mFavoritedImageFile = null;
         //find views
         final View controlsView = findViewById(R.id.ok_button);
@@ -71,17 +68,6 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
     }
 
     @Override
-    public void onSelectionActivated(View view) {
-        vibrate();
-        this.mShareMode = true;
-    }
-
-    @Override
-    public void onSelectionDeactivated(View view) {
-        this.mShareMode = false;
-    }
-
-    @Override
     public void onShareClicked(View view, Bitmap image){
         Intent shareIntent = new Intent(Intent.ACTION_SEND);
         shareIntent.putExtra(Intent.EXTRA_TEXT, getResources().getString(R.string.share_text));
@@ -99,7 +85,6 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
         shareIntent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(sharedImage));
         shareIntent.setType("image/jpeg");
         startActivity(Intent.createChooser(shareIntent, getResources().getString(R.string.share_via)));
-        this.deactivateSelection();
     }
 
     @Override
@@ -128,7 +113,6 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
         mMediaScanner.connect();
         //favorite/de-favorite file
         mFlipper.setFavorite(mFavoritedImageFile.exists());
-        this.deactivateSelection();
     }
 
     @Override
@@ -136,28 +120,6 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener, 
         String fileName = imageName + text.hashCode() + ".jpg";
         File favoritedImage = new File(this.getFilesDir(), fileName);
         mFlipper.setFavorite(favoritedImage.exists());
-    }
-
-    @Override
-    public void onBackPressed()
-    {
-        if(this.mShareMode){
-            vibrate();
-            this.deactivateSelection();
-        }
-        else{
-            super.onBackPressed();
-        }
-    }
-
-    public void deactivateSelection(){
-        this.mShareMode = false;
-        mFlipper.deactivateSelection(this);
-    }
-
-    public void vibrate(){
-        long[] pattern = {0, 100};
-        mVibrator.vibrate(pattern, -1);
     }
 
     @Override
