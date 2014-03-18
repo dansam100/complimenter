@@ -100,7 +100,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
                     hideView(view);
                     }
                 }, 1000);
-            } else if (view.getVisibility() == View.GONE) {
+            } else{
                 final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
                 fadeIn.setTarget(view);
                 fadeIn.addListener(
@@ -236,7 +236,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                mOnShareClickedListener.onShareClicked(view, mImageContext);
+                    mOnShareClickedListener.onShareClicked(view, mImageContext);
                 }
             }
         );
@@ -244,7 +244,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                mOnShareClickedListener.onShareClicked(view, mImageContext);
+                    mOnShareClickedListener.onShareClicked(view, mImageContext);
                 }
             }
         );
@@ -257,7 +257,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
+                    mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
                 }
             }
         );
@@ -265,7 +265,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
+                    mOnFavoriteClickedListener.onFavoriteClicked(view, mImageContext, getCurrentImageName(), getCurrentText());
                 }
             }
         );
@@ -313,7 +313,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             new AnimatorListenerAdapter() {
                 @Override
                 public void onAnimationEnd(Animator animator) {
-                mMenuMode = true;
+                    mMenuMode = true;
                 }
             }
         );
