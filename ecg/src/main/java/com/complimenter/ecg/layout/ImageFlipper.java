@@ -60,6 +60,10 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         this.toggleMenu(false);
     }
 
+    public void toggleMenu(){
+        this.toggleMenu(!mMenuVisible);
+    }
+
     public void toggleMenu(boolean show){
         if(show){
             this.showView(findViewById(R.id.flipper_menu));
@@ -80,6 +84,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
                 }
             }
         );
+        mMenuVisible = false;
         fadeOut.start();
     }
 
@@ -88,13 +93,13 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             if(mMenuCallback != null){
                 mMenuHandler.removeCallbacks(mMenuCallback);
             }
-            if (view.getVisibility() == View.VISIBLE) {
+            if (mMenuVisible) {
                 mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
                     @Override
                     public void run() {
                     hideView(view);
                     }
-                }, 2000);
+                }, 1000);
             } else if (view.getVisibility() == View.GONE) {
                 final AnimatorSet fadeIn = (AnimatorSet) AnimatorInflater.loadAnimator(this.getContext(), R.animator.ecg_show_share);
                 fadeIn.setTarget(view);
@@ -105,12 +110,13 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
                             mMenuHandler.postDelayed(mMenuCallback = new Runnable() {
                                 @Override
                                 public void run() {
-                                hideView(view);
+                                    hideView(view);
                                 }
                             }, 1000);
                         }
                     }
                 );
+                mMenuVisible = true;
                 view.setVisibility(View.VISIBLE);
                 fadeIn.start();
             }
@@ -173,26 +179,40 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
 
     class ImageFlipperGestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final String DEBUG_TAG = "Swipe";
+
+        @Override
+        public boolean onSingleTapConfirmed(MotionEvent event){
+            toggleMenu(true);
+            return true;
+        }
+
         @Override
         public boolean onDown(MotionEvent event){
             Log.d(DEBUG_TAG, "onDown: " + event.toString());
-            toggleMenu(true);
             return true;
         }
 
         @Override
         public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
             Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
-            if(velocityX < 0){
-                index++;
-                if(index >= getResources().getInteger(R.integer.max_images)) { index = 0; }
+            if(Math.abs(velocityX) > Math.abs(velocityY)) {
+                if (velocityX < 0) {
+                    index++;
+                    if (index >= getResources().getInteger(R.integer.max_images)) {
+                        index = 0;
+                    }
+                } else {
+                    index--;
+                    if (index < 0) {
+                        index = getResources().getInteger(R.integer.max_images) - 1;
+                    }
+                }
+                if (getResources().getBoolean(R.bool.animation)) {
+                    animateFling(velocityX > 0);
+                } else {
+                    loadNext();
+                }
             }
-            else{
-                index--;
-                if(index < 0) { index = getResources().getInteger(R.integer.max_images)-1; }
-            }
-            if(getResources().getBoolean(R.bool.animation)){ animateFling(velocityX > 0); }
-            else{ loadNext(); }
             return true;
         }
 
