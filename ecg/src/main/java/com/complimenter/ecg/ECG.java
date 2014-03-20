@@ -17,9 +17,12 @@ import com.complimenter.ecg.layout.ImageFlipperEventProvider;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.PrintWriter;
 
 public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
 {
+    private File mRootFolder;
+    private File mLogsFolder;
     private File mFavoritesFolder;
     private ImageFlipper mFlipper;
 
@@ -41,8 +44,19 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
             }
         );
 
+        Thread.setDefaultUncaughtExceptionHandler(
+            new Thread.UncaughtExceptionHandler() {
+                @Override
+                public void uncaughtException(Thread thread, Throwable throwable) {
+                    logToFile("UnCaught", "Exception on thread: " + thread + throwable);
+                }
+            }
+        );
+
         //setup folders
-        this.mFavoritesFolder = new File(Environment.getExternalStoragePublicDirectory(getString(R.string.app_name)), getString(R.string.favorites_folder));
+        this.mRootFolder = Environment.getExternalStoragePublicDirectory(getString(R.string.app_name));
+        this.mFavoritesFolder = new File(mRootFolder, getString(R.string.favorites_folder));
+        this.mLogsFolder = new File(mRootFolder, getString(R.string.logs_folder));
 
         //initiate load
         ImageFlipperEventProvider shareProvider = mFlipper;
@@ -54,9 +68,29 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
         mFlipper.setupFlipper();
     }
 
+    public void logToFile(String tag, String exception){
+        try {
+            File logFile = new File(mLogsFolder, "log.txt");
+            if (!logFile.exists()) {
+                if (!logFile.mkdirs()) {
+                    Log.d("LOGS", "Unable to create log folder");
+                }
+            }
+            new PrintWriter(logFile).print(String.format("%s: %s", tag, exception));
+        }
+        catch(Exception e){
+            Log.d("LOGS", "Unable to log to file");
+        }
+    }
+
     @Override
     protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
+        if(!mRootFolder.exists()){
+            if(!mRootFolder.mkdirs()){
+                Log.d("ROOT_FOLDER:", "Unable to create root folder");
+            }
+        }
         if(!mFavoritesFolder.exists()){
             if(!mFavoritesFolder.mkdirs()){
                 Log.d("FAVORITES:", "Unable to create favorites folder");
@@ -99,13 +133,19 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
             String fileName = imageName + text.hashCode() + ".jpg";
             File favoritedImage = new File(mFavoritesFolder, fileName);
             if (favoritedImage.exists()) {
-                if(favoritedImage.delete()) {
-                    Log.d("FAVORITE", "Removing favorite: " + Uri.fromFile(favoritedImage));
+                try {
+                    if (favoritedImage.delete()) {
+                        Log.d("FAVORITE", "Removing favorite: " + Uri.fromFile(favoritedImage));
+                    } else {
+                        Log.d("FAVORITE", "Failed to remove favorite: " + Uri.fromFile(favoritedImage));
+                    }
+                    //start media scannner
+                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.fromFile(favoritedImage)));
+                    Toast.makeText(this, getResources().getString(R.string.unfavorited), Toast.LENGTH_SHORT).show();
                 }
-                else{ Log.d("FAVORITE", "Failed to remove favorite: " + Uri.fromFile(favoritedImage)); }
-                //start media scannner
-                sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.fromFile(favoritedImage)));
-                Toast.makeText(this, getResources().getString(R.string.unfavorited), Toast.LENGTH_SHORT).show();
+                catch (Exception e){
+                    Log.d("FAVORITE", "Unable to remove favorites: " + Uri.fromFile(favoritedImage) + e);
+                }
             }
             else {
                 try {
@@ -113,11 +153,11 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
                     image.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                     stream.flush();
                     stream.close();
+                    sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.fromFile(favoritedImage)));
                 }
-                catch (Exception e) { Log.e("FAILED", "Failed to create file"); }
+                catch (Exception e) { Log.e("FAILED", "Failed to create file" + e); }
                 Log.d("FAVORITE", "Favoriting: " + Uri.fromFile(favoritedImage));
                 //start media scannner
-                sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.fromFile(favoritedImage)));
                 Toast.makeText(this, getResources().getString(R.string.favorited), Toast.LENGTH_SHORT).show();
                 //display favorited string
                 new Handler().postDelayed(new Runnable() {

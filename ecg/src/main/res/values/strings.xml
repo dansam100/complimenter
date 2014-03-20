@@ -31,5 +31,6 @@
     </string-array>
 
     <string name="favorites_folder">Favorites</string>
+    <string name="logs_folder">Logs</string>
 
 </resources>
