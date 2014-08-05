@@ -1,1 +1,1 @@
-include ':ecg'
+include ':app'
