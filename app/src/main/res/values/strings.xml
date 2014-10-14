@@ -14,23 +14,111 @@
     <string name="share_via">Share via:</string>
     <string name="share_subject">Smile!</string>
     <string name="share_text">This made my day. I hope it makes yours too!</string>
-
-    <string-array name="images">
-        <item>mountain</item>
-        <item>dog</item>
-        <item>necklace</item>
-        <item>stones</item>
-        <item>trees</item>
-    </string-array>
-    <string-array name="texts">
-        <item>Seeing your face makes me wanna smile.</item>
-        <item>Any day spent with you is my favorite day.</item>
-        <item>Just smile, you can do it.</item>
-        <item>My day got better when you opened this app.</item>
-        <item>What are you looking at, you pretty thing?</item>
-    </string-array>
-
     <string name="favorites_folder">Favorites</string>
     <string name="logs_folder">Logs</string>
 
+    <string-array name="texts">
+        <item>Have a great day</item>
+        <item>You are amazing!</item>
+        <item>Just smile, you can do it!</item>
+        <item>Your voice sounds so beautiful</item>
+        <item>You don\'t need any make-up \'cos you\'re already perfect</item>
+        <item>Any day spent with you is my favorite day</item>
+        <item>When in doubt, smile!</item>
+        <item>Chocolate is good, but you are even better</item>
+        <item>Nothing can stop you now</item>
+        <item>You are so strong!</item>
+        <item>Gazing at your eyes, makes me happy</item>
+        <item>I love the way you move</item>
+        <item>Your passion is contagious</item>
+        <item>Nothing can stop you now</item>
+        <item>You smell like heaven</item>
+        <item>You are so beautiful</item>
+        <item>You make everyone happy</item>
+        <item>You are the best!</item>
+        <item>You are on top of it</item>
+        <item>You may be imperfect but, you are it</item>
+        <item>Your posture is perfect!</item>
+        <item>You have an amazing imagination</item>
+        <item>You have such a gentle touch</item>
+        <item>I love the way you dance</item>
+        <item>You are one of the most confident and charismatic person I know</item>
+        <item>Your eyes are so beautiful!</item>
+        <item>You are a great friend!</item>
+        <item>I knew you could do it!</item>
+        <item>You are meaningful in this universe</item>
+        <item>You are gonna be someone important</item>
+        <item>You are the world to someone</item>
+        <item>Just seeing you smile, brightens up anyone\'s day. Smile more!</item>
+        <item>You are so thoughtful</item>
+        <item>Every time I see you, I learn something new</item>
+        <item>You inspire everyone</item>
+        <item>Your enthusiasm is contagious</item>
+        <item>You know the girl/guy you like, yeah they are thinking about you right now</item>
+        <item>You have a great personality</item>
+        <item>You have a big heart</item>
+        <item>People love being around you</item>
+        <item>You are such a true friend</item>
+        <item>People look up to you</item>
+        <item>You always make others smile</item>
+        <item>You always are making others laugh</item>
+        <item>Don\'t change anything about you!</item>
+        <item>You have such amazing energy</item>
+        <item>People love you for you</item>
+        <item>You always are putting others first</item>
+        <item>You are as sweet as a honeysuckle</item>
+        <item>You\'re as quiet as a sweet little mouse</item>
+        <item>You\'re eyes are blue like the crystal waterfall</item>
+        <item>You can make anyone, anywhere smile with your smile</item>
+        <item>Keep being you!</item>
+        <item>If we were in \'The hunger games\', could I be on your team?</item>
+        <item>Have a great way with words</item>
+        <item>You are a terrific leader</item>
+        <item>You make working on a project a joy</item>
+        <item>You are very creative</item>
+        <item>You are a good provider</item>
+        <item>You are fun to be with</item>
+        <item>You have a great reputation</item>
+        <item>You are clever</item>
+        <item>You make a house feel like a home</item>
+        <item>You have a good eye for decorating</item>
+        <item>You are a good driver</item>
+        <item>You can do anything you set your mind to</item>
+        <item>You are capable of accomplishing whatever you believe</item>
+        <item>You are a good listener</item>
+        <item>You are very cheerful</item>
+        <item>You warm my heart</item>
+        <item>You sing like an angel</item>
+        <item>You are very handsome/beautiful</item>
+        <item>You are important to me</item>
+        <item>You have a terrific outlook on life</item>
+        <item>You are very intelligent</item>
+        <item>You are kind</item>
+        <item>You are a good role model</item>
+        <item>You are very alert</item>
+        <item>You are funny</item>
+        <item>You always motivate me</item>
+        <item>You are unique</item>
+        <item>You are very strong</item>
+        <item>You are a picture of good health</item>
+        <item>You are courageous</item>
+        <item>You are very loving</item>
+        <item>You bring out the best in me</item>
+        <item>You make me want to be a better person</item>
+        <item>You make me smile</item>
+        <item>You are a wonderful cook</item>
+        <item>You make hot dogs taste like a gourmet meal</item>
+        <item>You are a wonderful caregiver</item>
+        <item>You make me feel special</item>
+        <item>You make me feel I can do anything</item>
+        <item>You are fun to be with</item>
+        <item>You are the wind beneath my wings</item>
+        <item>You are the light of my life</item>
+        <item>You smell better than sunshine on a cold day</item>
+        <item>I wish I had your skin</item>
+        <item>Man, those eyes are amazing!</item>
+        <item>Good thing you\'re in my life!</item>
+        <item>If it was rocky road ice cream or you, it\'d be you!</item>
+        <item>You\'re contagious....contagiously awesome!</item>
+    </string-array>
 </resources>

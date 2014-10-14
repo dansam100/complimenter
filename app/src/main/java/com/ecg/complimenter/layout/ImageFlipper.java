@@ -132,7 +132,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     }
 
     private String getCurrentImageName(){
-        return getResources().getStringArray(R.array.images)[index];
+        return "i" + Integer.toString(index + 1);
     }
 
     private String getCurrentText(){
@@ -154,7 +154,12 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     }
 
     private void loadImage(String imageName){
-        setBackgroundResource(getResources().getIdentifier(imageName, "drawable", getContext().getPackageName()));
+        try {
+            setBackgroundResource(getResources().getIdentifier(imageName, "drawable", getContext().getPackageName()));
+        }
+        catch(Exception e){
+            Log.d("IMAGE_FLIPPER:", "Unable to load file" + e);
+        }
     }
 
     private void loadText(String text){

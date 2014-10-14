@@ -45,7 +45,7 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
             new Thread.UncaughtExceptionHandler() {
                 @Override
                 public void uncaughtException(Thread thread, Throwable throwable) {
-                    logToFile("UnCaught", "Exception on thread: " + thread + throwable);
+                logToFile("UnCaught", "Exception on thread: " + thread + throwable);
                 }
             }
         );
@@ -136,7 +136,7 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
                     } else {
                         Log.d("FAVORITE", "Failed to remove favorite: " + Uri.fromFile(favoritedImage));
                     }
-                    //start media scannner
+                    //start media scanner
                     sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.fromFile(favoritedImage)));
                     Toast.makeText(this, getResources().getString(R.string.unfavorited), Toast.LENGTH_SHORT).show();
                 }

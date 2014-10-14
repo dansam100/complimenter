@@ -2,6 +2,6 @@
 <resources>
     <integer name="card_flip_time_full">300</integer>
     <integer name="card_flip_time_half">150</integer>
-    <integer name="max_images">5</integer>
+    <integer name="max_images">50</integer>
     <integer name="zoom_duration">1200</integer>
 </resources>
