@@ -4,13 +4,13 @@ import android.animation.Animator;
 import android.animation.AnimatorInflater;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
+import android.app.Activity;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 import android.view.GestureDetector;
-import android.view.GestureDetector;
-//import android.support.v4.view.GestureDetectorCompat;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,6 +24,7 @@ import java.io.ByteArrayOutputStream;
 
 /**
  * Created by sam.jr on 3/2/14.
+ * ImageFlipper class to handle all of display
  */
 public class ImageFlipper extends RelativeLayout implements ImageFlipperEventProvider {
     private GestureDetector mDetector;
@@ -40,6 +41,8 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     private Runnable mMenuCallback;
 
     private int index = 0;
+    private static int MAX_IMAGES = 0;
+    private static String[] STRING_ARRAY;
     public ImageFlipper(Context context, AttributeSet attrs){
         super(context, attrs);
 
@@ -51,11 +54,40 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         this.mMenuHandler = new Handler();
 
         mDetector = new GestureDetector(this.getContext(), new ImageFlipperGestureListener());
+        this.MAX_IMAGES = getResources().getInteger(R.integer.max_images);
+        this.STRING_ARRAY = getResources().getStringArray(R.array.texts);
+    }
+
+    private Activity getActivity() {
+        return (Activity)this.getContext();
     }
 
     public void setupFlipper(){
+        this.loadFlipperState();
         this.loadNext();
         this.toggleMenu(false);
+    }
+
+    public void saveFlipperState(){
+        try {
+            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putInt(getResources().getString(R.string.saved_state_variable), this.getCurrentPage());
+            editor.apply();
+        }
+        catch(Exception e){
+            Log.d("IMAGE_FLIPPER:", "Unable to save flipper state due to: " + e);
+        }
+    }
+
+    public void loadFlipperState(){
+        try {
+            SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
+            this.index = sharedPref.getInt(getResources().getString(R.string.saved_state_variable), 0);
+        }
+        catch(Exception e){
+            Log.d("IMAGE_FLIPPER:", "Unable to load flipper state due to: " + e);
+        }
     }
 
     public void toggleMenu(boolean show){
@@ -136,7 +168,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     }
 
     private String getCurrentText(){
-        return getResources().getStringArray(R.array.texts)[index];
+        return STRING_ARRAY[index];
     }
 
     public void loadNext(){
@@ -187,6 +219,10 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         public void onAnimationRepeat(Animation animation) {}
     };
 
+    public int getCurrentPage() {
+        return index;
+    }
+
     class ImageFlipperGestureListener extends GestureDetector.SimpleOnGestureListener {
         private static final String DEBUG_TAG = "Swipe";
 
@@ -202,13 +238,13 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
             if(Math.abs(velocityX) > Math.abs(velocityY)) {
                 if (velocityX < 0) {
                     index++;
-                    if (index >= getResources().getInteger(R.integer.max_images)) {
+                    if (index >= MAX_IMAGES) {
                         index = 0;
                     }
                 } else {
                     index--;
                     if (index < 0) {
-                        index = getResources().getInteger(R.integer.max_images) - 1;
+                        index = MAX_IMAGES - 1;
                     }
                 }
                 if (getResources().getBoolean(R.bool.animation)) {
@@ -248,12 +284,12 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     public void setOnShareClickedEventListener(ImageFlipperListener listener){
         this.mOnShareClickedListener = listener;
         this.findViewById(R.id.image_share_small).setOnClickListener(
-            new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mOnShareClickedListener.onShareClicked(view, capture());
+                new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mOnShareClickedListener.onShareClicked(view, capture());
+                    }
                 }
-            }
         );
     }
 
@@ -261,12 +297,12 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     public void setOnFavoriteClickedEventListener(ImageFlipperListener listener){
         this.mOnFavoriteClickedListener = listener;
         this.findViewById(R.id.image_favorite_small).setOnClickListener(
-            new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    mOnFavoriteClickedListener.onFavoriteClicked(view, capture(), getCurrentImageName(), getCurrentText());
+                new OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        mOnFavoriteClickedListener.onFavoriteClicked(view, capture(), getCurrentImageName(), getCurrentText());
+                    }
                 }
-            }
         );
     }
 

@@ -16,6 +16,7 @@
     <string name="share_text">This made my day. I hope it makes yours too!</string>
     <string name="favorites_folder">Favorites</string>
     <string name="logs_folder">Logs</string>
+    <string name="saved_state_variable">com.ECG.Complimenter.currentPage</string>
 
     <string-array name="texts">
         <item>Have a great day</item>
@@ -119,6 +120,6 @@
         <item>Man, those eyes are amazing!</item>
         <item>Good thing you\'re in my life!</item>
         <item>If it was rocky road ice cream or you, it\'d be you!</item>
-        <item>You\'re contagious....contagiously awesome!</item>
+        <item>You\'re contagious...contagiously awesome!</item>
     </string-array>
 </resources>

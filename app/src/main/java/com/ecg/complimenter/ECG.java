@@ -1,7 +1,9 @@
 package com.ecg.complimenter;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -174,5 +176,11 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
         String fileName = imageName + text.hashCode() + ".jpg";
         File favoritedImage = new File(mFavoritesFolder, fileName);
         mFlipper.setFavorite(favoritedImage.exists());
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mFlipper.saveFlipperState();
     }
 }
