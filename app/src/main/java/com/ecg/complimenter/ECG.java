@@ -95,7 +95,6 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
                 Log.d("FAVORITES:", "Unable to create favorites folder");
             }
         }
-        //TODO: Set up the image and compliment loaders
     }
 
     @Override

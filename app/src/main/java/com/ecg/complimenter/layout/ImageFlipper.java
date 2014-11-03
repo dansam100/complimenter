@@ -6,6 +6,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.AnimatorSet;
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Handler;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,6 +21,9 @@ import android.widget.RelativeLayout;
 import android.content.Context;
 import android.widget.TextView;
 import com.ecg.complimenter.R;
+import com.ecg.complimenter.data.ComplimentData;
+import com.ecg.complimenter.data.ComplimentDataPagerAdapter;
+
 import java.io.ByteArrayOutputStream;
 
 /**
@@ -32,6 +36,7 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     private Animation mSlideRight;
 
     private boolean mMenuVisible = false;
+    private boolean mAnimationEnabled;
 
     private ImageFlipperListener mOnShareClickedListener;
     private ImageFlipperListener mOnFavoriteClickedListener;
@@ -40,22 +45,36 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
     private Handler mMenuHandler;
     private Runnable mMenuCallback;
 
-    private int index = 0;
-    private static int MAX_IMAGES = 0;
-    private static String[] STRING_ARRAY;
+    private ComplimentDataPagerAdapter mDataProvider;
+
+    private int index = 0, previousIndex = -1;
+    private static int MAX_IMAGE_COUNT = 0;
     public ImageFlipper(Context context, AttributeSet attrs){
         super(context, attrs);
 
         this.mSlideLeft = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_left_right);
         this.mSlideRight = AnimationUtils.loadAnimation(this.getContext(), R.anim.ecg_slide_right_left);
+        Animation.AnimationListener mSlideAnimationListener = new Animation.AnimationListener() {
+            @Override
+            public void onAnimationStart(Animation animation) {
+                loadNext();
+            }
+
+            @Override
+            public void onAnimationEnd(Animation animation) {
+            }
+
+            @Override
+            public void onAnimationRepeat(Animation animation) {
+            }
+        };
         this.mSlideLeft.setAnimationListener(mSlideAnimationListener);
         this.mSlideRight.setAnimationListener(mSlideAnimationListener);
 
         this.mMenuHandler = new Handler();
 
         mDetector = new GestureDetector(this.getContext(), new ImageFlipperGestureListener());
-        this.MAX_IMAGES = getResources().getInteger(R.integer.max_images);
-        this.STRING_ARRAY = getResources().getStringArray(R.array.texts);
+        mAnimationEnabled = getResources().getBoolean(R.bool.animation);
     }
 
     private Activity getActivity() {
@@ -64,8 +83,16 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
 
     public void setupFlipper(){
         this.loadFlipperState();
+        this.loadData();
         this.loadNext();
         this.toggleMenu(false);
+        //TODO: Set up the image and compliment loaders
+    }
+
+    private void loadData()
+    {
+        this.mDataProvider = new ComplimentDataPagerAdapter(getContext(), 10);
+        MAX_IMAGE_COUNT = mDataProvider.getDataCount();
     }
 
     public void saveFlipperState(){
@@ -163,19 +190,20 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         }
     }
 
-    private String getCurrentImageName(){
-        return "i" + Integer.toString(index + 1);
-    }
-
-    private String getCurrentText(){
-        return STRING_ARRAY[index];
+    public ComplimentData getCurrentCompliment(){
+        return mDataProvider.getItem(index);
     }
 
     public void loadNext(){
-        this.loadImage(getCurrentImageName());
-        this.loadText(getCurrentText());
-        if(this.mOnNavigateEventListener != null) {
-            this.mOnNavigateEventListener.onNavigate(this, getCurrentImageName(), getCurrentText());
+        if(index != previousIndex) {
+            ComplimentData complimentData = this.getCurrentCompliment();
+            if (complimentData != null) {
+                this.loadImage(complimentData.getImageData());
+                this.loadText(complimentData.getText());
+                if (this.mOnNavigateEventListener != null) {
+                    this.mOnNavigateEventListener.onNavigate(this, complimentData.getImageName(), complimentData.getText());
+                }
+            }
         }
     }
 
@@ -185,9 +213,10 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         this.startAnimation(slide);
     }
 
-    private void loadImage(String imageName){
+    private void loadImage(byte[] binaryData){
         try {
-            setBackgroundResource(getResources().getIdentifier(imageName, "drawable", getContext().getPackageName()));
+            BitmapDrawable bmp = new BitmapDrawable(BitmapFactory.decodeByteArray(binaryData, 0, binaryData.length));
+            this.setBackground(bmp);
         }
         catch(Exception e){
             Log.d("IMAGE_FLIPPER:", "Unable to load file" + e);
@@ -210,15 +239,6 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         return true;
     }
 
-    private Animation.AnimationListener mSlideAnimationListener = new Animation.AnimationListener() {
-        @Override
-        public void onAnimationStart(Animation animation) { loadNext(); }
-        @Override
-        public void onAnimationEnd(Animation animation) {}
-        @Override
-        public void onAnimationRepeat(Animation animation) {}
-    };
-
     public int getCurrentPage() {
         return index;
     }
@@ -235,22 +255,26 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
         @Override
         public boolean onFling(MotionEvent event1, MotionEvent event2, float velocityX, float velocityY) {
             Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
+            previousIndex = index;
             if(Math.abs(velocityX) > Math.abs(velocityY)) {
                 if (velocityX < 0) {
                     index++;
-                    if (index >= MAX_IMAGES) {
+                    if (index >= MAX_IMAGE_COUNT) {
                         index = 0;
                     }
                 } else {
                     index--;
                     if (index < 0) {
-                        index = MAX_IMAGES - 1;
+                        index = MAX_IMAGE_COUNT - 1;
                     }
                 }
-                if (getResources().getBoolean(R.bool.animation)) {
+                if (mAnimationEnabled && index != previousIndex && getCurrentCompliment() != null) {
                     animateFling(velocityX > 0);
-                } else {
+                } else if(index != previousIndex && getCurrentCompliment() != null) {
                     loadNext();
+                }
+                else{
+                    index = previousIndex;
                 }
             }
             return true;
@@ -300,7 +324,10 @@ public class ImageFlipper extends RelativeLayout implements ImageFlipperEventPro
                 new OnClickListener() {
                     @Override
                     public void onClick(View view) {
-                        mOnFavoriteClickedListener.onFavoriteClicked(view, capture(), getCurrentImageName(), getCurrentText());
+                        ComplimentData complimentData = getCurrentCompliment();
+                        if(complimentData != null) {
+                            mOnFavoriteClickedListener.onFavoriteClicked(view, capture(), complimentData.getImageName(), complimentData.getText());
+                        }
                     }
                 }
         );

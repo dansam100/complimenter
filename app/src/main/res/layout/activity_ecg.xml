@@ -10,7 +10,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:background="@color/black_overlay" />
-    
+
     <LinearLayout
         android:id="@+id/flipper_menu"
         android:layout_width="fill_parent"
