@@ -29,6 +29,16 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ecg);
+
+        Thread loader = new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        performLoad();
+                    }
+                }
+        );
+
         //find views
         final View controlsView = findViewById(R.id.ok_button);
         mFlipper = (ImageFlipper)findViewById(R.id.container);
@@ -65,6 +75,16 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
             shareProvider.setOnSelectionChangedEventListener(this);
         }
         mFlipper.setupFlipper();
+    }
+
+    private void performLoad() {
+        File favesFolder = new File(Environment.getExternalStoragePublicDirectory(getString(R.string.app_name)),
+                getString(R.string.favorites_folder));
+        if(!favesFolder.exists()){
+            if(!favesFolder.mkdirs()){
+                Log.d("FAVORITES:", "Unable to create favorites folder");
+            }
+        }
     }
 
     public void logToFile(String tag, String exception){
