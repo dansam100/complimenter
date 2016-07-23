@@ -19,6 +19,50 @@
     <string name="saved_state_variable">com.ecg.complimenter.currentPage</string>
 
     <string-array name="texts">
+        <item>Your eyes are blue like the crystal waterfall</item>
+        <item>You make cheesy bread taste like a gourmet meal</item>
+        <item>Happy Birthday, Love!</item>
+        <item>You can make anyone anywhere smile with your smile</item>
+        <item>Keep being you!</item>
+        <item>If we were in \'The Hunger Games,\' could I be on your team?</item>
+        <item>You have a great way with words</item>
+        <item>You warm my heart</item>
+        <item>You make working on any project a joy</item>
+        <item>You are very creative</item>
+        <item>You are fun to be with</item>
+        <item>You make a house feel like a home</item>
+        <item>You have a good eye for decorating</item>
+        <item>You can do anything you set your mind to</item>
+        <item>You are capable of accomplishing whatever you believe</item>
+        <item>You are a great listener</item>
+        <item>You are a terrific leader</item>
+        <item>You are important to me</item>
+        <item>You have a terrific outlook on life</item>
+        <item>You sing like an angel</item>
+        <item>You are very handsome/beautiful</item>
+        <item>You are super intelligent and a gentle soul</item>
+        <item>You are a good role model</item>
+        <item>You are soo funny</item>
+        <item>You always motivate me</item>
+        <item>You are courageous and very loving</item>
+        <item>You are stronger than you know</item>
+        <item>You bring out the best in me</item>
+        <item>You make me want to be a better person</item>
+        <item>You make me feel I can do anything</item>
+        <item>You are a wonderful caregiver</item>
+        <item>You make me feel special</item>
+        <item>You are the wind beneath my wings</item>
+        <item>You are fun to be with</item>
+        <item>You make me smile</item>
+        <item>You are the light of my life</item>
+        <item>You smell better than sunshine on a cold day</item>
+        <item>You are so sharp!</item>
+        <item>You are so grounded</item>
+        <item>Good thing you\'re in my life! </item>
+        <item>If it was rocky road ice cream or you, it\'d be YOU</item>
+        <item>You\'re contagious&#8230;contagiously awesome!</item>
+        <item>Every person is beautiful. Sometimes it just takes the right people to see it</item>
+        <item>When someone leaves, it\'s because someone else is about to arrive</item>
         <item>Have a great day</item>
         <item>You are amazing!</item>
         <item>Just smile, you can do it!</item>
@@ -120,6 +164,6 @@
         <item>Man, those eyes are amazing!</item>
         <item>Good thing you\'re in my life!</item>
         <item>If it was rocky road ice cream or you, it\'d be you!</item>
-        <item>You\'re contagious...contagiously awesome!</item>
+        <item>You\'re contagious&#8230;contagiously awesome!</item>
     </string-array>
 </resources>
