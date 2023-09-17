@@ -1,9 +1,7 @@
 package com.ecg.complimenter;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
@@ -13,10 +11,15 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
-import com.ecg.complimenter.layout.*;
+
+import com.ecg.complimenter.layout.ImageFlipper;
+import com.ecg.complimenter.layout.ImageFlipperEventProvider;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+
+import androidx.annotation.NonNull;
 
 public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
 {
@@ -35,21 +38,11 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
 
         //set listener for close event
         controlsView.setOnClickListener(
-            new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    ECG.this.finish();
-                }
-            }
+                view -> ECG.this.finish()
         );
 
         Thread.setDefaultUncaughtExceptionHandler(
-            new Thread.UncaughtExceptionHandler() {
-                @Override
-                public void uncaughtException(Thread thread, Throwable throwable) {
-                logToFile("UnCaught", "Exception on thread: " + thread + throwable);
-                }
-            }
+                (thread, throwable) -> logToFile("UnCaught", "Exception on thread: " + thread + throwable)
         );
 
         //setup folders
@@ -64,7 +57,7 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
             shareProvider.setOnFavoriteClickedEventListener(this);
             shareProvider.setOnSelectionChangedEventListener(this);
         }
-        mFlipper.setupFlipper();
+        if (mFlipper != null) mFlipper.setupFlipper();
     }
 
     public void logToFile(String tag, String exception){
@@ -75,9 +68,11 @@ public class ECG extends Activity implements ImageFlipper.ImageFlipperListener
                     Log.d("LOGS", "Unable to create log folder");
                 }
             }
-            new PrintWriter(logFile).print(String.format("%s: %s", tag, exception));
+            try (PrintWriter writer = new PrintWriter(logFile)) {
+                writer.print(String.format("%s: %s", tag, exception));
+            }
         }
-        catch(Exception e){
+        catch(Exception e) {
             Log.d("LOGS", "Unable to log to file");
         }
     }

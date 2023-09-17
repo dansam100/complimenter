@@ -1,7 +1,6 @@
 package com.ecg.complimenter.data;
 
 import android.content.Context;
-import android.util.Log;
 import android.widget.ArrayAdapter;
 
 import com.ecg.complimenter.R;

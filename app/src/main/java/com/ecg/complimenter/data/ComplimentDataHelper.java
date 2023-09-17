@@ -10,6 +10,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Created by Sam on 10/28/2014.
@@ -25,7 +27,7 @@ public class ComplimentDataHelper extends SQLiteOpenHelper {
     public static final String COLUMN_IMAGE_NAME = "image_name";
     public static final String[] ALL_COLUMNS;
 
-    private Context mContext;
+    private final Context mContext;
 
     static{
         ALL_COLUMNS = new String[]{COLUMN_ID, COLUMN_TEXT, COLUMN_IMAGE_NAME, COLUMN_IMAGE};
@@ -43,7 +45,7 @@ public class ComplimentDataHelper extends SQLiteOpenHelper {
                 //Open your local db within apk as the input stream
                 InputStream sourceDBStream = mContext.getAssets().open(DATABASE_NAME);
                 //Open the empty db as the output stream
-                OutputStream mainDBStream = new FileOutputStream(mContext.getDatabasePath(DATABASE_NAME).getPath());
+                OutputStream mainDBStream = Files.newOutputStream(Paths.get(mContext.getDatabasePath(DATABASE_NAME).getPath()));
                 //transfer bytes from the inputFile to the outputFile
                 byte[] buffer = new byte[1024];
                 int length;
@@ -77,13 +79,13 @@ public class ComplimentDataHelper extends SQLiteOpenHelper {
         if(database != null){
             database.close();
         }
-        return database != null ? true : false;
+        return database != null;
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
         Log.w("DATABASE", String.format("Upgrading database from version %i to %i, which will destroy all old data", oldVersion, newVersion));
-        if(databaseExists()) {
+        if (databaseExists()) {
             onCreate(database);
         }
     }
